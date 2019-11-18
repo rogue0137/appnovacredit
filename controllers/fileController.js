@@ -1,5 +1,6 @@
 const _ = require("lodash");
 const fs = require('fs-extra');
+const pathMod = require('path');
 const models = require("../models");
 const { State } = models;
 const { File } = models;
@@ -69,6 +70,7 @@ const saveMetaData = async (req, res, next) => {
     res.json(`Success: ${filename} metadata has been assigned the ID ${id}`);
   } catch (e) {
     console.log(`ERROR: ${e}`);
+    res.json(`Failure`);
   }
 };
 
@@ -84,12 +86,11 @@ const saveFile = async (req, res, next) => {
         const { filename, description, tags, ext } = dataValues;
         const stateId = savedMetaData[0].id;
         if (newExt === ext) {
-            const fromPath = (__dirname + '/../' + path);
-            const toPath = (__dirname + '/../novaCredit/' + name);
-            const pathForDB = (`novaCredit/${name}`);
+            const fromPath = pathMod.join(__dirname + '/../' + path);
+            const toPath = pathMod.join(__dirname + '/../novaCredit/' + name);
             await fs.copy(fromPath, toPath, (e) => {
                 if (e) throw e;
-                console.log(`File moved to ${toPath}`);
+                console.log(`File moved from ${fromPath} to ${toPath}`);
             });
             const fileData = await savedFile(
                 ext,
@@ -99,17 +100,18 @@ const saveFile = async (req, res, next) => {
                 requestingBank,
                 size,
                 type,
-                pathForDB
+                toPath
             );
             const { dataValues } = fileData;
             const { id } = dataValues;
             await deleteFileMetaData(stateId);
-            res.json(`Success: ${filename} metadata has been assigned the ID ${id}`);
+            res.json(`Success: ${filename} has been assigned the ID ${id}`);
         } else {
             res.json(`The extension does not match`);
         }
     } catch (e) {
         console.log(`ERROR: ${e}`);
+        res.json(`Failure`);
     }
 };
 
@@ -125,10 +127,10 @@ const getSavedFileInfo = async (req, res, next)=> {
             },
             raw: true
         });
-        console.log(savedFile);
         res.json(savedFile);
     } catch (e) {
         console.log(`ERROR: ${e}`);
+        res.json(`Failure`);
     }
 }
 module.exports = {
