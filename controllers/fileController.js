@@ -1,4 +1,5 @@
 const _ = require("lodash");
+const fs = require('fs-extra');
 const models = require("../models");
 const { State } = models;
 const { File } = models;
@@ -9,10 +10,10 @@ const getExt = filename => {
 
 const sendMetaDataToDB = async (ext, filename, description, tags) => {
     return State.create({
-        ext: ext,
-        filename: filename,
-        description: description,
-        tags: tags
+        ext,
+        filename,
+        description,
+        tags
     });
 };
 
@@ -20,7 +21,7 @@ const getMetaData = async filename => {
   return State.findAll({
       limit: 1,
       where: {
-          filename: filename
+          filename
       }
   });
 };
@@ -32,7 +33,8 @@ const savedFile = async (
   tags,
   requestingBank,
   size,
-  type
+  type,
+  filepath
 ) => {
   return await File.create({
     ext,
@@ -41,7 +43,8 @@ const savedFile = async (
     tags,
     requestingBank,
     size,
-    type
+    type,
+    filepath
   });
 };
 
@@ -58,7 +61,6 @@ const saveMetaData = async (req, res, next) => {
   try {
     const { fields } = req;
     const { filename, description, tags } = fields;
-    console.log(tags);
     const ext = getExt(filename);
     const metadata = await sendMetaDataToDB(ext, filename, description, tags);
 
@@ -75,13 +77,19 @@ const saveFile = async (req, res, next) => {
     try {
         const { fields, files } = req;
         const { requestingBank } = fields;
-        const { size, name, type } = files.file;
+        const { size, name, type, path } = files.file;
         const newExt = getExt(name);
         const savedMetaData = await getMetaData(name);
         const { dataValues } = savedMetaData[0];
         const { filename, description, tags, ext } = dataValues;
         const stateId = savedMetaData[0].id;
         if (newExt === ext) {
+            const newPath = (__dirname + '/../novaCredit/' + name);
+            const pathForDB = (`novaCredit/${name}`);
+            await fs.copy(path, newPath, (e) => {
+                if (e) throw e;
+                console.log(`File moved to ${newPath}`);
+            });
             const fileData = await savedFile(
                 ext,
                 filename,
@@ -89,7 +97,8 @@ const saveFile = async (req, res, next) => {
                 tags,
                 requestingBank,
                 size,
-                type
+                type,
+                pathForDB
             );
             const { dataValues } = fileData;
             const { id } = dataValues;

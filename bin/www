@@ -8,7 +8,6 @@ const models = require('../models');
 
 
 // Helper functions
-
 const normalizePort = (val) => {
   const port = parseInt(val, 10);
 
