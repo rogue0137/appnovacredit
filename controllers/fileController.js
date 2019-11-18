@@ -84,11 +84,12 @@ const saveFile = async (req, res, next) => {
         const { filename, description, tags, ext } = dataValues;
         const stateId = savedMetaData[0].id;
         if (newExt === ext) {
-            const newPath = (__dirname + '/../novaCredit/' + name);
+            const fromPath = (__dirname + '/../' + path);
+            const toPath = (__dirname + '/../novaCredit/' + name);
             const pathForDB = (`novaCredit/${name}`);
-            await fs.copy(path, newPath, (e) => {
+            await fs.copy(fromPath, toPath, (e) => {
                 if (e) throw e;
-                console.log(`File moved to ${newPath}`);
+                console.log(`File moved to ${toPath}`);
             });
             const fileData = await savedFile(
                 ext,
