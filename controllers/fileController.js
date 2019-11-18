@@ -127,7 +127,7 @@ const getSavedFileInfo = async (req, res, next)=> {
             },
             raw: true
         });
-        res.json(savedFile);
+        res.json(savedFile[0]);
     } catch (e) {
         console.log(`ERROR: ${e}`);
         res.json(`Failure`);
