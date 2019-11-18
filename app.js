@@ -11,10 +11,6 @@ app.set('view engine', 'jade');
 // For files in forms
 app.use(formidableMiddleware());
 
-// Parse requests
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
 
 app.use('/', indexRouter);
 app.use('/files',fileRouter);

@@ -7,9 +7,6 @@ const fileController = require('../controllers/fileController');
 // Routes
 router.post('/phase1', fileController.saveMetaData);
 router.post('/phase2', fileController.saveFile);
-
-router.get('/:id', function (req, res) {
-  res.send('Hello!')
-});
+router.get('/:id', fileController.getSavedFileInfo);
 
 module.exports = router;

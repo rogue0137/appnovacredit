@@ -7,7 +7,8 @@ module.exports = (sequelize, DataTypes) => {
         tags: DataTypes.ARRAY(DataTypes.STRING),
         ext: DataTypes.STRING,
         requestingBank: DataTypes.STRING,
-        file: DataTypes.VIRTUAL
+        size: DataTypes.INTEGER,
+        type: DataTypes.STRING
     }, {});
     File.associate = function(models) {
         // associations can be defined here

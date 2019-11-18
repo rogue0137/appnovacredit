@@ -1,23 +1,26 @@
+const _ = require("lodash");
 const models = require("../models");
+const { State } = models;
+const { File } = models;
 
 const getExt = filename => {
   return filename.split(".").pop();
 };
 
 const sendMetaDataToDB = async (ext, filename, description, tags) => {
-  return await models.State.create({
-    ext,
-    filename,
-    description,
-    tags
-  });
+    return State.create({
+        ext: ext,
+        filename: filename,
+        description: description,
+        tags: tags
+    });
 };
 
 const getMetaData = async filename => {
-  return models.State.findAll({
+  return State.findAll({
       limit: 1,
       where: {
-          filename
+          filename: filename
       }
   });
 };
@@ -31,7 +34,7 @@ const savedFile = async (
   size,
   type
 ) => {
-  return await models.File.create({
+  return await File.create({
     ext,
     filename,
     description,
@@ -43,7 +46,7 @@ const savedFile = async (
 };
 
 const deleteFileMetaData = async id => {
-  return models.File.destroy({
+  return State.destroy({
       where: {
           id
       }
@@ -53,8 +56,9 @@ const deleteFileMetaData = async id => {
 // phase1
 const saveMetaData = async (req, res, next) => {
   try {
-    const { body } = req;
-    const { filename, description, tags } = body;
+    const { fields } = req;
+    const { filename, description, tags } = fields;
+    console.log(tags);
     const ext = getExt(filename);
     const metadata = await sendMetaDataToDB(ext, filename, description, tags);
 
@@ -66,7 +70,7 @@ const saveMetaData = async (req, res, next) => {
   }
 };
 
-
+// phase 2
 const saveFile = async (req, res, next) => {
     try {
         const { fields, files } = req;
@@ -74,8 +78,9 @@ const saveFile = async (req, res, next) => {
         const { size, name, type } = files.file;
         const newExt = getExt(name);
         const savedMetaData = await getMetaData(name);
-        const { id, filename, description, tags, ext } = savedMetaData;
-
+        const { dataValues } = savedMetaData[0];
+        const { filename, description, tags, ext } = dataValues;
+        const stateId = savedMetaData[0].id;
         if (newExt === ext) {
             const fileData = await savedFile(
                 ext,
@@ -86,11 +91,10 @@ const saveFile = async (req, res, next) => {
                 size,
                 type
             );
-
             const { dataValues } = fileData;
             const { id } = dataValues;
+            await deleteFileMetaData(stateId);
             res.json(`Success: ${filename} metadata has been assigned the ID ${id}`);
-            res.json(`success`);
         } else {
             res.json(`The extension does not match`);
         }
@@ -99,7 +103,26 @@ const saveFile = async (req, res, next) => {
     }
 };
 
+// :id
+const getSavedFileInfo = async (req, res, next)=> {
+    try {
+        const { id } = req.params;
+        const idAsInt = parseInt(id);
+        const savedFile = await File.findAll({
+            limit: 1,
+            where: {
+                id: idAsInt
+            },
+            raw: true
+        });
+        console.log(savedFile);
+        res.json(savedFile);
+    } catch (e) {
+        console.log(`ERROR: ${e}`);
+    }
+}
 module.exports = {
   saveMetaData,
   saveFile,
+  getSavedFileInfo
 };
